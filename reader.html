@@ -191,13 +191,19 @@
   @media (prefers-reduced-motion: reduce){ .tk{transition:none} }
 
   /* prompt drawer */
-  .promptTab{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:40;
-        appearance:none;border:1px solid var(--rule);border-right:0;
-        background:var(--surface);color:var(--ink-2);cursor:pointer;
-        border-radius:10px 0 0 10px;padding:15px 7px;box-shadow:var(--shadow);
+  /* 축 색을 그대로 입혀 눈에 띄게 하고, 읽는 시선(스테이지)과 겹치지 않도록
+     화면 아래쪽에 둔다. 글자색은 카드 배경색이라 밝은·어두운 테마 모두에서 대비가 난다. */
+  .promptTab{position:fixed;right:0;z-index:40;
+        top:auto;bottom:calc(10vh + env(safe-area-inset-bottom,0px));
+        appearance:none;border:1px solid var(--piv);border-right:0;
+        background:var(--piv);color:var(--surface);cursor:pointer;
+        border-radius:10px 0 0 10px;padding:17px 8px;
+        box-shadow:-2px 2px 14px -4px var(--piv-line), var(--shadow);
         writing-mode:vertical-rl;text-orientation:mixed;
-        font-size:12px;font-weight:500;letter-spacing:.09em}
-  .promptTab:hover{color:var(--piv);border-color:var(--piv-line)}
+        font-size:12.5px;font-weight:600;letter-spacing:.1em;
+        transition:filter .15s ease}
+  .promptTab:hover{filter:brightness(1.08)}
+  @media (prefers-reduced-motion: reduce){ .promptTab{transition:none} }
   .scrim{position:fixed;inset:0;z-index:50;background:rgba(10,12,16,.42);
          opacity:0;pointer-events:none;transition:opacity .18s ease}
   .scrim.on{opacity:1;pointer-events:auto}
