@@ -190,6 +190,66 @@
   .tk.term b{color:var(--ink)}
   @media (prefers-reduced-motion: reduce){ .tk{transition:none} }
 
+  /* prompt drawer */
+  .promptTab{position:fixed;right:0;top:50%;transform:translateY(-50%);z-index:40;
+        appearance:none;border:1px solid var(--rule);border-right:0;
+        background:var(--surface);color:var(--ink-2);cursor:pointer;
+        border-radius:10px 0 0 10px;padding:15px 7px;box-shadow:var(--shadow);
+        writing-mode:vertical-rl;text-orientation:mixed;
+        font-size:12px;font-weight:500;letter-spacing:.09em}
+  .promptTab:hover{color:var(--piv);border-color:var(--piv-line)}
+  .scrim{position:fixed;inset:0;z-index:50;background:rgba(10,12,16,.42);
+         opacity:0;pointer-events:none;transition:opacity .18s ease}
+  .scrim.on{opacity:1;pointer-events:auto}
+  .drawer{position:fixed;top:0;right:0;z-index:60;height:100%;
+        width:min(460px,100%);display:flex;flex-direction:column;
+        background:var(--surface);border-left:1px solid var(--rule);
+        box-shadow:-18px 0 44px -28px rgba(0,0,0,.5);
+        transform:translateX(100%);visibility:hidden;
+        transition:transform .22s cubic-bezier(.3,.7,.3,1),visibility .22s}
+  .drawer.on{transform:none;visibility:visible}
+  @media (prefers-reduced-motion: reduce){ .drawer,.scrim{transition:none} }
+
+  .drawer-head{display:flex;align-items:center;justify-content:space-between;gap:10px;
+        padding:16px 16px 13px;border-bottom:1px solid var(--rule);background:var(--surface-2);
+        padding-top:calc(16px + env(safe-area-inset-top,0px))}
+  .drawer-head h2{margin:0;font-size:15px;font-weight:600;letter-spacing:-.01em}
+  .drawer .x{appearance:none;border:1px solid var(--rule);background:var(--surface);
+        color:var(--ink-3);border-radius:7px;width:30px;height:30px;cursor:pointer;
+        line-height:1;flex:0 0 auto}
+  .drawer .x:hover{color:var(--ink);border-color:var(--rule-2)}
+  .drawer-body{flex:1;overflow-y:auto;padding:16px;
+        padding-bottom:calc(26px + env(safe-area-inset-bottom,0px));
+        display:flex;flex-direction:column;gap:15px}
+  /* 자동 축소를 막아야 프롬프트 블록이 찌그러지지 않고 서랍이 스크롤된다 */
+  .drawer-body > *{flex:0 0 auto}
+  .drawer-body h3{margin:0;font-size:11px;font-family:var(--mono);letter-spacing:.09em;
+        color:var(--ink-3);font-weight:500}
+  .lead{margin:0;font-size:13px;line-height:1.75;color:var(--ink-2)}
+  .lead b{color:var(--ink);font-weight:600}
+  .steps{margin:0;padding-left:1.2em;font-size:13px;line-height:1.9;color:var(--ink-2)}
+  .steps b{color:var(--ink);font-weight:600}
+  .steps::marker{color:var(--ink-3)}
+  .fill{display:flex;flex-direction:column;gap:12px;background:var(--piv-soft);
+        border:1px solid var(--piv-line);border-radius:10px;padding:14px}
+  .fill > h3{color:var(--piv)}
+  .f{display:flex;flex-direction:column;gap:5px}
+  .f > span{font-size:12px;color:var(--ink-2);font-weight:500}
+  /* 아래 지문 칸용 전역 textarea 규칙(min-height:120px)이 여기까지 오지 않게 덮는다 */
+  .f textarea,.f input{width:100%;background:var(--surface);border:1px solid var(--rule);
+        border-radius:8px;padding:9px 11px;font-size:13px;font-family:var(--sans);
+        line-height:1.6;resize:vertical;min-height:0}
+  .f textarea{min-height:58px}
+  .muted{margin:0;font-size:11.5px;line-height:1.65;color:var(--ink-3)}
+  .prompt-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .copy{appearance:none;background:var(--piv);border:1px solid var(--piv);color:#fff;
+        border-radius:7px;padding:7px 15px;font-size:12.5px;font-weight:600;cursor:pointer}
+  .copy[data-done="1"]{background:var(--surface);color:var(--piv)}
+  .prompt{margin:0;background:var(--paper);border:1px solid var(--rule);border-radius:9px;
+        padding:13px;font-family:var(--mono);font-size:11.5px;line-height:1.75;
+        color:var(--ink-2);white-space:pre-wrap;word-break:break-word;
+        max-height:300px;overflow-y:auto;-webkit-user-select:text;user-select:text}
+
   /* source */
   .source{background:var(--surface);border:1px solid var(--rule);border-radius:12px;
           box-shadow:var(--shadow);padding:16px;display:flex;flex-direction:column;gap:12px}
@@ -229,7 +289,7 @@
   <header class="head">
     <div class="brand">
       <h1>읽기 가속기</h1>
-      <p class="sub">읽을 글을 붙여넣으면 <b>어절 단위로 한 자리에 흘려보내거나</b>, 어근만 굵게 세워 눈을 끌어갑니다. 속도·묶음·굵기는 글의 밀도에 맞춰 조절하세요.</p>
+      <p class="sub">읽을 글을 붙여넣으면 <b>어절 단위로 한 자리에 흘려보내거나</b>, 어근만 굵게 세워 눈을 끌어갑니다. 속도·묶음·굵기는 글의 밀도에 맞춰 조절하세요. 전공 PPT는 오른쪽 <b>프롬프트</b> 탭으로 먼저 줄글로 바꿔 오세요.</p>
     </div>
     <div class="modes" role="tablist" aria-label="읽기 방식">
       <button class="mode" id="modeRsvp" role="tab" aria-selected="true">흐름 읽기</button>
@@ -330,14 +390,13 @@
   <section class="source">
     <h2>지문</h2>
     <textarea id="input" spellcheck="false" aria-label="읽을 글 붙여넣기"
-      placeholder="강의록·교재·논문 등 읽을 글을 그대로 붙여넣으세요. txt·md·pdf 파일은 [파일 열기] 로.&#10;빈 줄은 단락으로, 짧고 마침표 없는 줄은 소제목으로 인식합니다."></textarea>
+      placeholder="강의록·교재·논문 등 읽을 글을 그대로 붙여넣으세요. Claude 로 정리한 .md 파일은 [md 열기] 로.&#10;빈 줄은 단락으로, 짧고 마침표 없는 줄은 소제목으로 인식합니다."></textarea>
     <div class="row">
       <button class="apply" id="btnApply">이 글로 읽기</button>
-      <button class="ghostbtn" id="btnFile">파일 열기</button>
+      <button class="ghostbtn" id="btnFile">md 열기</button>
       <button class="ghostbtn" id="btnSample">예시 지문</button>
       <button class="ghostbtn" id="btnClear">비우기</button>
-      <input type="file" id="file" hidden
-             accept=".txt,.md,.markdown,.pdf,text/plain,text/markdown,application/pdf">
+      <input type="file" id="file" hidden accept=".md,.markdown,text/markdown">
       <span class="tally" id="tally"></span>
     </div>
   </section>
@@ -350,6 +409,53 @@
     붙여넣은 글과 읽던 위치는 이 브라우저에만 저장되고, 다음에 열면 그 자리에서 이어집니다.
   </footer>
 </div>
+
+<button class="promptTab" id="promptTab" aria-haspopup="dialog" aria-controls="promptPanel">프롬프트</button>
+
+<div class="scrim" id="scrim"></div>
+
+<aside class="drawer" id="promptPanel" role="dialog" aria-modal="true"
+       aria-labelledby="promptTitle" aria-hidden="true">
+  <div class="drawer-head">
+    <h2 id="promptTitle">전공 PPT를 줄글로</h2>
+    <button class="x" id="promptClose" aria-label="닫기">✕</button>
+  </div>
+
+  <div class="drawer-body">
+    <p class="lead">PPT는 토막 난 명사구라 그대로 읽으면 속독이 걸리지 않습니다.
+      아래 프롬프트로 <b>전공책 문체의 줄글</b>로 먼저 바꾼 뒤, 그 결과를 이 리더에 붙여넣으세요.</p>
+
+    <ol class="steps">
+      <li>Claude에 전공 PPT 파일을 올린다</li>
+      <li>아래 프롬프트를 복사해 함께 보낸다</li>
+      <li>나온 줄글을 복사해 이 페이지 아래 <b>지문</b> 칸에 붙여넣는다</li>
+    </ol>
+
+    <div class="fill">
+      <h3>본인 상황에 맞게 채우세요</h3>
+      <label class="f">
+        <span>[입력 데이터] — 무엇을, 어디까지 정리할지</span>
+        <textarea id="pIn" rows="2" spellcheck="false"
+          placeholder="예: 폴더에 있는 13개 ppt 중 5장_정형데이터관리와 활용 까지(1,2,3,4,5장)"></textarea>
+      </label>
+      <label class="f">
+        <span>[output] — 결과를 어디로 받을지</span>
+        <input id="pOut" spellcheck="false"
+          placeholder="예: 클로드 독스 / 마크다운 파일 / 이 채팅창에 바로">
+      </label>
+      <p class="muted">이 두 줄만 사람마다 다릅니다. 과목·장 번호·파일 이름을 그대로 적을수록
+        엉뚱한 범위를 정리하는 일이 줄어듭니다. 비워 두면 복사본에 채울 자리가 표시됩니다.</p>
+    </div>
+
+    <div class="prompt-head">
+      <h3>프롬프트</h3>
+      <button class="copy" id="promptCopy">복사</button>
+    </div>
+    <pre class="prompt" id="promptText"></pre>
+
+    <p class="muted">결과를 마크다운 파일로 받았다면 아래 <b>md 열기</b>로 바로 불러올 수 있습니다.</p>
+  </div>
+</aside>
 
 <script>
 (function(){
@@ -796,11 +902,7 @@
       : "글을 붙여넣으면 분량과 예상 시간을 계산합니다";
   }
 
-  /* ---------------------------------------------------- 파일 열기 */
-  // pdf.js 최신판은 ESM 전용이라 UMD 전역이 없다. 필요할 때만 동적으로 불러온다.
-  var PDFJS = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.4.299/pdf.min.mjs";
-  var PDFJS_WORKER = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.4.299/pdf.worker.min.mjs";
-  var pdfLib = null;
+  /* ---------------------------------------------------- 파일 열기 (.md) */
   var fileEl = $("file");
 
   function note(msg){ tally.textContent = msg; }
@@ -808,61 +910,16 @@
   function decodeText(buf){
     try { return new TextDecoder("utf-8", { fatal:true }).decode(buf); }
     catch (e) {
-      try { return new TextDecoder("euc-kr").decode(buf); }   // 국내 txt 는 cp949 가 흔하다
+      try { return new TextDecoder("euc-kr").decode(buf); }   // 국내 파일은 cp949 가 흔하다
       catch (e2) { return new TextDecoder().decode(buf); }
     }
-  }
-
-  // PDF 는 줄마다 개행이 박혀 나온다. 문장이 끝난 자리만 단락으로 남긴다.
-  function tidyPdf(raw){
-    var t = raw.replace(/\r/g, "");
-    t = t.replace(/-\n(?=[a-z])/g, "");               // 영문 하이픈 줄바꿈 복원
-    t = t.replace(/[ \t]*\n[ \t]*\n+/g, "\n\n");      // 빈 줄은 단락으로 보존
-    t = t.replace(/([.!?。])\n(?!\n)/g, "$1\n\n");
-    t = t.replace(/(다\.)\n(?!\n)/g, "$1\n\n");
-    t = t.replace(/([^.!?。\n])\n(?!\n)/g, "$1 ");    // 나머지 개행은 공백
-    t = t.replace(/[ \t]{2,}/g, " ");
-    return t.trim();
-  }
-
-  function pdfToText(buf){
-    var ready = pdfLib ? Promise.resolve(pdfLib) : import(PDFJS).then(function(mod){
-      mod.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
-      pdfLib = mod;
-      return mod;
-    });
-    return ready.then(function(lib){
-      return lib.getDocument({ data: buf }).promise;
-    }).then(function(doc){
-      var pages = [], i = 0;
-      // 쪽 수가 많을 수 있으니 순차로 돌린다. 한꺼번에 띄우면 메모리가 터진다.
-      function nextPage(){
-        if (i >= doc.numPages) return Promise.resolve();
-        i++;
-        note("PDF 읽는 중 — " + i + " / " + doc.numPages + "쪽");
-        return doc.getPage(i)
-          .then(function(pg){ return pg.getTextContent(); })
-          .then(function(tc){
-            var lines = [], line = "";
-            tc.items.forEach(function(it){
-              if (typeof it.str !== "string") return;
-              line += it.str;
-              if (it.hasEOL){ lines.push(line); line = ""; }
-            });
-            if (line) lines.push(line);
-            pages.push(lines.join("\n"));
-            return nextPage();
-          });
-      }
-      return nextPage().then(function(){ return tidyPdf(pages.join("\n\n")); });
-    });
   }
 
   function useText(text){
     input.value = text;
     termsEl.value = "";
     var prev = restore();
-    // 같은 파일을 다시 열었으면 읽던 자리에서 이어 읽는다.
+    // 같은 글을 다시 열었으면 읽던 자리에서 이어 읽는다.
     state.cursor = (prev && prev.text === text) ? (prev.cursor || 0) : 0;
     load(text, true);
   }
@@ -871,15 +928,11 @@
   fileEl.addEventListener("change", function(){
     var f = fileEl.files && fileEl.files[0];
     if (!f) return;
-    var isPdf = /\.pdf$/i.test(f.name) || f.type === "application/pdf";
     note("읽는 중 — " + f.name);
     f.arrayBuffer()
-      .then(function(buf){ return isPdf ? pdfToText(buf) : decodeText(buf); })
-      .then(function(text){
-        if (!text || !text.trim()){
-          note("본문 텍스트가 없습니다. 스캔 이미지 PDF 는 글자를 뽑을 수 없습니다.");
-          return;
-        }
+      .then(function(buf){
+        var text = decodeText(buf);
+        if (!text || !text.trim()){ note("빈 파일입니다."); return; }
         useText(text);
       })
       .catch(function(err){
@@ -887,6 +940,125 @@
       })
       .then(function(){ fileEl.value = ""; });
   });
+
+  /* ---------------------------------------------------- 프롬프트 서랍 */
+  // PPT 를 그대로 읽으면 토막 난 명사구라 속독이 걸리지 않는다.
+  // 줄글로 바꿔 오는 프롬프트를 손 닿는 곳에 둔다.
+  var PROMPT_BODY = [
+    "[역할 정의]",
+    "너는 해당 학문 분야의 권위 있는 대학교 전공 서적을 집필하는 대학교수이자 저자이다. 입력되는 PPT 슬라이드의 텍스트와 핵심 개념을 바탕으로, 학술적이고 가독성이 높은 전공책 스타일의 줄글(본문)을 작성해야 한다.",
+    "",
+    "[작성 지침 및 규칙]",
+    "1. 문체 및 어조: ",
+    "- 대학 전공 서적 특유의 객관적, 논리적, 학술적 어조(~이다, ~한다)를 사용해라.",
+    "- \"안녕하세요\", \"이 슬라이드에서는\" 같은 구어체나 안내성 표현은 절대 포함하지 마라.",
+    "- 문맥상 생략된 조사나 어미를 정확하게 채워 완벽한 문장으로 서술해라.",
+    "",
+    "2. 내용 확장 및 인과관계 보완:",
+    "- PPT 특성상 요약·생략된 개념 간의 인과관계(원인, 결과, 메커니즘)를 학술적 사실에 기반해 논리적으로 연결하여 서술해라.",
+    "- 단순히 단어를 나열하지 말고, 각 개념이 왜 중요하며 어떻게 작용하는지 풀어써라.",
+    "",
+    "3. 구조화:",
+    "- PPT의 큰 제목이나 장(Chapter) 구분을 바탕으로 적절한 학술적 소제목(예: 1.1, 1.2 또는 핵심 주제어)을 구성해라.",
+    "- 가독성을 위해 내용이 바뀔 때마다 문단을 나누어 서술해라. 특수문자나 Bullet point(*, -)는 사용하지 말고 오직 줄글로만 작성해라.",
+    "",
+    "4. 용어 처리:",
+    "- 전공 필수 용어 및 개념은 정확한 학술 용어를 사용해라. 필요하다면 한자나 영어 원어를 병기해라 (예: 마케팅 믹스(Marketing Mix))."
+  ].join("\n");
+
+  var IN_HINT  = "〈무엇을 어디까지 정리할지 적으세요 — 예: 폴더의 PPT 13개 중 1~5장까지〉";
+  var OUT_HINT = "〈결과를 어디로 받을지 적으세요 — 예: 클로드 독스〉";
+
+  var drawer = $("promptPanel"), scrim = $("scrim"), promptTab = $("promptTab");
+  var pIn = $("pIn"), pOut = $("pOut"), promptPre = $("promptText"), copyBtn = $("promptCopy");
+  var drawerOpen = false;
+
+  function buildPrompt(){
+    return PROMPT_BODY +
+      "\n\n---\n[입력 데이터]\n" + (pIn.value.trim() || IN_HINT) +
+      "\n\n[output]\n" + (pOut.value.trim() || OUT_HINT);
+  }
+
+  var PKEY = "accel.prompt.v1";
+  function savePrompt(){
+    try { localStorage.setItem(PKEY, JSON.stringify({ i:pIn.value, o:pOut.value })); }
+    catch (e) {}
+  }
+  function restorePrompt(){
+    try {
+      var raw = localStorage.getItem(PKEY);
+      if (!raw) return;
+      var d = JSON.parse(raw);
+      pIn.value = d.i || "";
+      pOut.value = d.o || "";
+    } catch (e) {}
+  }
+
+  function refreshPrompt(){
+    promptPre.textContent = buildPrompt();
+    copyBtn.textContent = "복사";
+    copyBtn.removeAttribute("data-done");
+  }
+
+  function openDrawer(){
+    if (drawerOpen) return;
+    stop();                                  // 서랍을 열면 재생은 멈춘다
+    drawerOpen = true;
+    drawer.classList.add("on");
+    scrim.classList.add("on");
+    drawer.setAttribute("aria-hidden", "false");
+    refreshPrompt();
+    $("promptClose").focus();
+  }
+  function closeDrawer(){
+    if (!drawerOpen) return;
+    drawerOpen = false;
+    drawer.classList.remove("on");
+    scrim.classList.remove("on");
+    drawer.setAttribute("aria-hidden", "true");
+    promptTab.focus();
+  }
+
+  promptTab.addEventListener("click", openDrawer);
+  $("promptClose").addEventListener("click", closeDrawer);
+  scrim.addEventListener("click", closeDrawer);
+  pIn.addEventListener("input", function(){ refreshPrompt(); savePrompt(); });
+  pOut.addEventListener("input", function(){ refreshPrompt(); savePrompt(); });
+
+  function copyText(s){
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      return navigator.clipboard.writeText(s);
+    }
+    // iframe 등에서 클립보드 권한이 없을 때의 폴백
+    return new Promise(function(res, rej){
+      try {
+        var ta = document.createElement("textarea");
+        ta.value = s;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed";
+        ta.style.opacity = "0";
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        document.body.removeChild(ta);
+        res();
+      } catch (e) { rej(e); }
+    });
+  }
+
+  copyBtn.addEventListener("click", function(){
+    copyText(buildPrompt()).then(function(){
+      copyBtn.textContent = "복사됨";
+      copyBtn.setAttribute("data-done", "1");
+      setTimeout(refreshPrompt, 1600);
+    }).catch(function(){
+      copyBtn.textContent = "직접 선택해 복사";
+      copyBtn.setAttribute("data-done", "1");
+    });
+  });
+
+  restorePrompt();
+  refreshPrompt();
 
   /* ---------------------------------------------------- 컨트롤 */
   function segment(id, apply){
@@ -985,6 +1157,7 @@
   });
 
   document.addEventListener("keydown", function(e){
+    if (drawerOpen){ if (e.key === "Escape") closeDrawer(); return; }
     var t = e.target.tagName;
     if (t === "TEXTAREA" || t === "INPUT") return;
     switch (e.key){
