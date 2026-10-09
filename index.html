@@ -1,0 +1,1075 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="붙여넣은 글을 어절 단위로 흘려보내거나 어근만 굵게 세워 읽는 속독 도구.">
+<meta name="theme-color" content="#F6F7F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#111317" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="가속기">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<style>
+  /* 아티팩트 플랫폼이 붙여 주던 최소 리셋을 배포본에서 직접 넣는다. */
+  :root{color-scheme:light dark;
+        padding-top:env(safe-area-inset-top,0px);
+        padding-bottom:env(safe-area-inset-bottom,0px)}
+  body{margin:0;font:14px system-ui,-apple-system,sans-serif}
+  img{max-width:100%}
+  [hidden]{display:none!important}
+</style>
+</head>
+<body>
+<title>읽기 가속기</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;700&family=IBM+Plex+Sans+KR:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root{
+    --paper:#F6F7F7;
+    --surface:#FFFFFF;
+    --surface-2:#EBEEF0;
+    --ink:#14161A;
+    --ink-2:#49515C;
+    --ink-3:#828B96;
+    --rule:#DBDFE4;
+    --rule-2:#BFC6CD;
+    --mark:rgba(224,168,58,.30);
+    --mark-line:#C98E24;
+    --mark-ink:#8A5E09;
+    --slate:#2C333D;
+    --shadow:0 1px 2px rgba(20,22,26,.05), 0 8px 24px -16px rgba(20,22,26,.22);
+    --sans:"IBM Plex Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
+    --serif:"Noto Serif KR","Apple SD Gothic Neo",serif;
+    --mono:"IBM Plex Mono","SFMono-Regular",Consolas,monospace;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#111317;
+      --surface:#191C21;
+      --surface-2:#22262C;
+      --ink:#E6E9EC;
+      --ink-2:#A3ABB6;
+      --ink-3:#6C7580;
+      --rule:#292E35;
+      --rule-2:#3A4048;
+      --mark:rgba(230,180,80,.24);
+      --mark-line:#D9A748;
+      --mark-ink:#E8BE6E;
+      --slate:#B8C2CF;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -18px rgba(0,0,0,.8);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#111317;
+    --surface:#191C21;
+    --surface-2:#22262C;
+    --ink:#E6E9EC;
+    --ink-2:#A3ABB6;
+    --ink-3:#6C7580;
+    --rule:#292E35;
+    --rule-2:#3A4048;
+    --mark:rgba(230,180,80,.24);
+    --mark-line:#D9A748;
+    --mark-ink:#E8BE6E;
+    --slate:#B8C2CF;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 28px -18px rgba(0,0,0,.8);
+  }
+
+  /* 축 글자 색 — 기본 빨강. 밝은 테마 값을 먼저 전부 선언한다. */
+  :root,:root.piv-red{--piv:#D4291B;--piv-soft:rgba(212,41,27,.10);--piv-line:rgba(212,41,27,.38)}
+  :root.piv-amber    {--piv:#B4600A;--piv-soft:rgba(180,96,10,.12);--piv-line:rgba(180,96,10,.40)}
+  :root.piv-teal     {--piv:#0D6E86;--piv-soft:rgba(13,110,134,.11);--piv-line:rgba(13,110,134,.38)}
+  :root.piv-violet   {--piv:#6D28D9;--piv-soft:rgba(109,40,217,.10);--piv-line:rgba(109,40,217,.36)}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]),
+    :root:not([data-theme="light"]).piv-red{--piv:#FF6F5E;--piv-soft:rgba(255,111,94,.16);--piv-line:rgba(255,111,94,.46)}
+    :root:not([data-theme="light"]).piv-amber {--piv:#E9A33C;--piv-soft:rgba(233,163,60,.16);--piv-line:rgba(233,163,60,.46)}
+    :root:not([data-theme="light"]).piv-teal  {--piv:#45BEDA;--piv-soft:rgba(69,190,218,.16);--piv-line:rgba(69,190,218,.46)}
+    :root:not([data-theme="light"]).piv-violet{--piv:#A98BFA;--piv-soft:rgba(169,139,250,.16);--piv-line:rgba(169,139,250,.46)}
+  }
+  :root[data-theme="dark"],
+  :root[data-theme="dark"].piv-red   {--piv:#FF6F5E;--piv-soft:rgba(255,111,94,.16);--piv-line:rgba(255,111,94,.46)}
+  :root[data-theme="dark"].piv-amber {--piv:#E9A33C;--piv-soft:rgba(233,163,60,.16);--piv-line:rgba(233,163,60,.46)}
+  :root[data-theme="dark"].piv-teal  {--piv:#45BEDA;--piv-soft:rgba(69,190,218,.16);--piv-line:rgba(69,190,218,.46)}
+  :root[data-theme="dark"].piv-violet{--piv:#A98BFA;--piv-soft:rgba(169,139,250,.16);--piv-line:rgba(169,139,250,.46)}
+
+  body{background:var(--paper);color:var(--ink);font-family:var(--sans);
+       -webkit-font-smoothing:antialiased}
+  *{box-sizing:border-box}
+  button,input,select,textarea{font:inherit;color:inherit}
+  :focus-visible{outline:2px solid var(--piv);outline-offset:2px;border-radius:4px}
+
+  .wrap{max-width:880px;margin:0 auto;padding-inline:18px;padding-block:26px 48px;
+        display:flex;flex-direction:column;gap:20px}
+
+  /* header */
+  .head{display:flex;gap:18px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+  .brand{min-width:0}
+  h1{margin:0;font-size:21px;font-weight:600;letter-spacing:-.01em}
+  .sub{margin:5px 0 0;color:var(--ink-2);font-size:13px;line-height:1.6;max-width:50ch}
+  .sub b{font-weight:600;color:var(--ink)}
+  .modes{display:flex;background:var(--surface-2);border:1px solid var(--rule);
+         border-radius:9px;padding:3px;gap:3px;flex:0 0 auto}
+  .mode{appearance:none;border:0;background:transparent;color:var(--ink-2);
+        padding:7px 14px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer}
+  .mode[aria-selected="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+
+  /* stage */
+  .stage{cursor:pointer;position:relative;background:var(--surface);border:1px solid var(--rule);
+         border-radius:12px;box-shadow:var(--shadow);padding-block:32px 20px;overflow:hidden}
+  .reticle{position:relative;padding-block:6px}
+  .tick{position:absolute;left:50%;width:1px;height:11px;background:var(--piv-line)}
+  .tick.top{top:-5px}
+  .tick.bot{bottom:-5px}
+  .guide{position:absolute;left:14px;right:14px;height:1px;background:var(--rule)}
+  .guide.top{top:-5px}
+  .guide.bot{bottom:-5px}
+  .word{--wscale:1;--wshrink:1;
+        display:grid;grid-template-columns:1fr auto 1fr;align-items:center;
+        font-family:var(--sans);font-weight:600;line-height:1.4;letter-spacing:-.02em;
+        font-size:calc(clamp(25px,7vw,44px) * var(--wscale) * var(--wshrink));
+        height:calc(clamp(25px,7vw,44px) * var(--wscale) * 1.4);
+        padding-inline:10px;overflow:hidden}
+  .word .pre{text-align:right;white-space:pre}
+  .word .post{text-align:left;white-space:pre}
+  .word .piv{color:var(--piv);font-weight:700}
+  .ghost{margin-top:14px;text-align:center;color:var(--ink-3);font-size:13px;
+         height:1.5em;line-height:1.5;padding-inline:14px;
+         white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .flags{position:absolute;top:12px;left:14px;display:flex;gap:5px}
+  .tag{font-family:var(--mono);font-size:10px;letter-spacing:.08em;border-radius:3px;
+       padding:3px 7px;border:1px solid var(--rule-2);color:var(--ink-3)}
+  .tag.term{color:var(--mark-ink);background:var(--mark);border-color:var(--mark-line)}
+  .tag.para{color:var(--piv);background:var(--piv-soft);border-color:var(--piv-line)}
+  .counts{position:absolute;top:12px;right:14px;font-family:var(--mono);font-size:10px;
+          letter-spacing:.06em;color:var(--ink-3);font-variant-numeric:tabular-nums}
+
+  /* rail */
+  .rail{position:relative;height:22px;cursor:pointer;touch-action:none}
+  .rail-track{position:absolute;inset:10px 0 auto;height:3px;background:var(--surface-2);
+              border-radius:2px;overflow:hidden}
+  .rail-fill{height:100%;width:0;background:var(--piv);border-radius:2px}
+  .rail-tick{position:absolute;top:5px;width:1px;height:13px;background:var(--rule-2)}
+  .meter{display:flex;justify-content:space-between;gap:12px;margin-top:-14px;
+         font-family:var(--mono);font-size:11px;color:var(--ink-3);
+         font-variant-numeric:tabular-nums;letter-spacing:.02em}
+
+  /* transport */
+  .transport{display:flex;gap:8px;flex-wrap:wrap}
+  .transport button{flex:1 1 auto;min-width:80px;background:var(--surface);
+        border:1px solid var(--rule);border-radius:9px;padding:11px 10px;font-size:13px;
+        color:var(--ink-2);cursor:pointer;box-shadow:var(--shadow)}
+  .transport button:hover{border-color:var(--rule-2);color:var(--ink)}
+  .transport button.primary{flex:2 1 150px;background:var(--slate);border-color:var(--slate);
+        color:var(--surface);font-weight:600}
+  .transport button.primary:hover{color:var(--surface)}
+  .transport button.toggle[aria-pressed="true"]{background:var(--piv-soft);
+        border-color:var(--piv-line);color:var(--piv);font-weight:600}
+
+  /* controls */
+  .controls{display:flex;flex-direction:column;gap:13px;background:var(--surface);
+            border:1px solid var(--rule);border-radius:12px;padding:16px;box-shadow:var(--shadow)}
+  .ctl{display:flex;align-items:center;gap:13px;flex-wrap:wrap}
+  .ctl .name{flex:0 0 70px;font-size:11px;color:var(--ink-3);
+        font-family:var(--mono);letter-spacing:.07em}
+  .ctl input[type=range]{flex:1 1 150px;accent-color:var(--piv);min-width:130px}
+  .val{font-family:var(--mono);font-size:12.5px;color:var(--ink);
+       font-variant-numeric:tabular-nums;min-width:80px;text-align:right}
+  .seg{display:flex;border:1px solid var(--rule);border-radius:7px;overflow:hidden;flex:0 0 auto}
+  .seg button{appearance:none;border:0;background:var(--surface);color:var(--ink-3);
+        padding:7px 13px;font-size:12.5px;cursor:pointer;border-left:1px solid var(--rule)}
+  .seg button:first-child{border-left:0}
+  .seg .sw{display:inline-block;width:8px;height:8px;border-radius:50%;
+        margin-right:6px;vertical-align:-1px}
+  .seg button[aria-pressed="true"]{background:var(--piv-soft);color:var(--piv);font-weight:600}
+  .hint{font-size:11.5px;color:var(--ink-3);line-height:1.55;flex:1 1 170px;min-width:150px}
+  .hint b{font-weight:600;color:var(--ink-2)}
+  .terms{flex:1 1 220px;min-width:170px;background:var(--paper);border:1px solid var(--rule);
+         border-radius:7px;padding:8px 11px;font-size:13px}
+
+  /* text panel */
+  .panel{background:var(--surface);border:1px solid var(--rule);border-radius:12px;
+         box-shadow:var(--shadow);overflow:hidden}
+  .panel-head{display:flex;align-items:center;gap:10px;padding:10px 12px;
+        border-bottom:1px solid var(--rule);background:var(--surface-2);overflow-x:auto}
+  .pmark{appearance:none;flex:0 0 auto;border:1px solid var(--rule-2);background:var(--surface);
+        color:var(--ink-3);border-radius:5px;padding:4px 9px;font-family:var(--mono);
+        font-size:10.5px;cursor:pointer;letter-spacing:.04em}
+  .pmark:hover{border-color:var(--piv-line);color:var(--piv)}
+  .pmark[aria-current="true"]{background:var(--piv-soft);border-color:var(--piv-line);
+        color:var(--piv);font-weight:500}
+  .body{padding:20px 18px;max-height:300px;overflow-y:auto;font-family:var(--serif);
+        font-size:15.5px;line-height:2.05;color:var(--ink-2);overflow-wrap:break-word}
+  .mode-bionic .body{max-height:min(68vh,620px);font-size:17.5px;line-height:2.3;padding:26px 20px}
+  .body p{margin:0 0 1em}
+  .body p:last-child{margin-bottom:0}
+  .body p.h{font-family:var(--sans);font-size:1.02em;font-weight:600;color:var(--ink);
+        line-height:1.6;margin-block:.4em .7em}
+  .body b{font-weight:700;color:var(--ink)}
+  .tk{border-radius:3px;transition:background-color .1s linear,opacity .1s linear}
+  .tk.read{opacity:.5}
+  .tk.on{opacity:1;background:var(--piv-soft);box-shadow:0 1.5px 0 var(--piv-line)}
+  .tk.term{background:var(--mark);box-shadow:0 1.5px 0 var(--mark-line)}
+  .tk.term b{color:var(--ink)}
+  @media (prefers-reduced-motion: reduce){ .tk{transition:none} }
+
+  /* source */
+  .source{background:var(--surface);border:1px solid var(--rule);border-radius:12px;
+          box-shadow:var(--shadow);padding:16px;display:flex;flex-direction:column;gap:12px}
+  .source h2{margin:0;font-size:12px;font-family:var(--mono);letter-spacing:.08em;
+        color:var(--ink-3);font-weight:500}
+  textarea{width:100%;min-height:120px;resize:vertical;background:var(--paper);
+        border:1px solid var(--rule);border-radius:9px;padding:13px;font-family:var(--serif);
+        font-size:14px;line-height:1.9}
+  textarea::placeholder{color:var(--ink-3);font-family:var(--sans)}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .apply{background:var(--piv);border:1px solid var(--piv);color:#fff;border-radius:8px;
+         padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer}
+  .ghostbtn{background:transparent;border:1px solid var(--rule);color:var(--ink-3);
+         border-radius:8px;padding:10px 14px;font-size:12.5px;cursor:pointer}
+  .ghostbtn:hover{border-color:var(--rule-2);color:var(--ink-2)}
+  .tally{margin-left:auto;font-family:var(--mono);font-size:11.5px;color:var(--ink-3);
+         font-variant-numeric:tabular-nums}
+
+  footer{border-top:1px solid var(--rule);padding-top:16px;color:var(--ink-3);
+         font-size:11.5px;line-height:1.95}
+  kbd{font-family:var(--mono);font-size:10.5px;background:var(--surface-2);
+      border:1px solid var(--rule);border-bottom-width:2px;border-radius:4px;
+      padding:1px 5px;color:var(--ink-2)}
+
+  @media (max-width:560px){
+    .head{flex-direction:column;gap:14px}
+    .modes{width:100%}
+    .mode{flex:1}
+    .ctl .name{flex:0 0 100%}
+    .val{text-align:left;min-width:0}
+    .tally{margin-left:0;width:100%}
+  }
+</style>
+
+<div class="wrap mode-rsvp" id="wrap">
+
+  <header class="head">
+    <div class="brand">
+      <h1>읽기 가속기</h1>
+      <p class="sub">읽을 글을 붙여넣으면 <b>어절 단위로 한 자리에 흘려보내거나</b>, 어근만 굵게 세워 눈을 끌어갑니다. 속도·묶음·굵기는 글의 밀도에 맞춰 조절하세요.</p>
+    </div>
+    <div class="modes" role="tablist" aria-label="읽기 방식">
+      <button class="mode" id="modeRsvp" role="tab" aria-selected="true">흐름 읽기</button>
+      <button class="mode" id="modeBionic" role="tab" aria-selected="false">굵기 읽기</button>
+    </div>
+  </header>
+
+  <section class="stage" id="stage" aria-label="어절 표시창">
+    <div class="flags" id="flags"></div>
+    <div class="counts" id="paraCount"></div>
+    <div class="reticle">
+      <div class="guide top"></div>
+      <div class="tick top"></div>
+      <div class="word" id="word">
+        <span class="pre" id="wPre"></span><span class="piv" id="wPiv"></span><span class="post" id="wPost"></span>
+      </div>
+      <div class="tick bot"></div>
+      <div class="guide bot"></div>
+    </div>
+    <div class="ghost" id="ghost"></div>
+  </section>
+
+  <div>
+    <div class="rail" id="rail" role="slider" tabindex="0" aria-label="진행 위치"
+         aria-valuemin="0" aria-valuenow="0" aria-valuemax="0">
+      <div class="rail-track"><div class="rail-fill" id="railFill"></div></div>
+    </div>
+    <div class="meter">
+      <span id="posLabel">0 / 0 어절</span>
+      <span id="timeLabel">남은 시간 —</span>
+    </div>
+  </div>
+
+  <div class="transport">
+    <button id="btnBack" title="이전 어절">◂ 어절</button>
+    <button id="btnSent" title="이 문장 처음으로">⟲ 문장</button>
+    <button id="btnPlay" class="primary">▶ 재생</button>
+    <button id="btnFwd" title="다음 어절">어절 ▸</button>
+    <button id="btnLoop" class="toggle" aria-pressed="false" title="이 단락만 반복">↻ 단락 반복</button>
+  </div>
+
+  <div class="controls">
+    <div class="ctl">
+      <span class="name">속도</span>
+      <input type="range" id="wpm" min="100" max="800" step="10" value="280" aria-label="분당 어절">
+      <span class="val" id="wpmVal">280 어절/분</span>
+    </div>
+    <div class="ctl">
+      <span class="name">묶음</span>
+      <div class="seg" id="chunkSeg">
+        <button id="chunk1" data-n="1" aria-pressed="true">1어절</button>
+        <button id="chunk2" data-n="2" aria-pressed="false">2어절</button>
+        <button id="chunk3" data-n="3" aria-pressed="false">3어절</button>
+      </div>
+      <span class="hint">정의·공식처럼 촘촘한 글은 1어절, 설명문·사례는 2~3어절이 편합니다.</span>
+    </div>
+    <div class="ctl">
+      <span class="name">굵기</span>
+      <div class="seg" id="strSeg">
+        <button data-v="0" aria-pressed="false">끄기</button>
+        <button data-v="0.35" aria-pressed="false">약</button>
+        <button data-v="0.5" aria-pressed="true">중</button>
+        <button data-v="0.7" aria-pressed="false">강</button>
+      </div>
+      <span class="hint">조사(은·는·이·가·을·를…)를 떼어낸 <b>어근 앞부분</b>만 굵게 처리합니다.</span>
+    </div>
+    <div class="ctl">
+      <span class="name">체류</span>
+      <div class="seg" id="dwellSeg">
+        <button id="dwellOn" data-v="1" aria-pressed="true">켜기</button>
+        <button id="dwellOff" data-v="0" aria-pressed="false">끄기</button>
+      </div>
+      <span class="hint">문장 끝·쉼표, 긴 단어, <b>영문 용어와 숫자</b>, 괄호, 단락 첫머리에서 자동으로 느려집니다.</span>
+    </div>
+    <div class="ctl">
+      <span class="name">축 색</span>
+      <div class="seg" id="pivSeg">
+        <button data-v="red" aria-pressed="true"><span class="sw" style="background:#D4291B"></span>빨강</button>
+        <button data-v="amber" aria-pressed="false"><span class="sw" style="background:#C97A14"></span>주황</button>
+        <button data-v="teal" aria-pressed="false"><span class="sw" style="background:#1E8FA8"></span>청록</button>
+        <button data-v="violet" aria-pressed="false"><span class="sw" style="background:#7C4DE0"></span>보라</button>
+      </div>
+      <span class="hint">가운데 고정되는 축 글자의 색. 진행바와 본문 현재 위치 표시도 같이 바뀝니다.</span>
+    </div>
+    <div class="ctl">
+      <span class="name">용어</span>
+      <input class="terms" id="terms" spellcheck="false"
+             placeholder="쉼표로 구분 — 예: 작업기억, 회귀, spaced repetition">
+      <span class="hint">적어 둔 용어는 본문에 형광으로 남고, 지나갈 때 더 오래 머무릅니다.</span>
+    </div>
+  </div>
+
+  <section class="panel">
+    <div class="panel-head" id="paraStrip" aria-label="단락 이동"></div>
+    <div class="body" id="body"></div>
+  </section>
+
+  <section class="source">
+    <h2>지문</h2>
+    <textarea id="input" spellcheck="false" aria-label="읽을 글 붙여넣기"
+      placeholder="강의록·교재·논문 등 읽을 글을 그대로 붙여넣으세요. txt·md·pdf 파일은 [파일 열기] 로.&#10;빈 줄은 단락으로, 짧고 마침표 없는 줄은 소제목으로 인식합니다."></textarea>
+    <div class="row">
+      <button class="apply" id="btnApply">이 글로 읽기</button>
+      <button class="ghostbtn" id="btnFile">파일 열기</button>
+      <button class="ghostbtn" id="btnSample">예시 지문</button>
+      <button class="ghostbtn" id="btnClear">비우기</button>
+      <input type="file" id="file" hidden
+             accept=".txt,.md,.markdown,.pdf,text/plain,text/markdown,application/pdf">
+      <span class="tally" id="tally"></span>
+    </div>
+  </section>
+
+  <footer>
+    <kbd>Space</kbd> 재생·정지 · <kbd>←</kbd><kbd>→</kbd> 어절 · <kbd>↑</kbd><kbd>↓</kbd> 속도 ±20 ·
+    <kbd>R</kbd> 문장 처음 · <kbd>[</kbd><kbd>]</kbd> 단락 이동 · <kbd>1</kbd><kbd>2</kbd><kbd>3</kbd> 묶음 ·
+    <kbd>Home</kbd> 맨 앞<br>
+    흐름 읽기는 RSVP(Rapid Serial Visual Presentation), 굵기 읽기는 Bionic Reading 방식입니다.
+    붙여넣은 글과 읽던 위치는 이 브라우저에만 저장되고, 다음에 열면 그 자리에서 이어집니다.
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var SAMPLE =
+"왜 읽어도 남지 않는가\n" +
+"작업기억(working memory)이 한 번에 붙들 수 있는 정보는 대략 네 덩이(chunk) 정도다. 교재를 한 줄씩 훑는데도 이해가 남지 않는 이유는 글이 어려워서가 아니라, 시선을 되돌리는 회귀(regression) 동작과 줄을 다시 찾는 비용이 그 좁은 작업기억을 먼저 차지해 버리기 때문이다.\n" +
+"\n" +
+"흐름 읽기가 건드리는 것\n" +
+"RSVP는 글을 한 자리에 순서대로 띄워 시선 이동 자체를 없앤다. 눈이 멈춰 있으면 회귀가 일어나지 않고, 그만큼의 용량이 의미 처리로 넘어간다. 다만 속도를 올리면 이해도는 어느 지점부터 급격히 떨어지므로, 분당 250어절 안팎에서 시작해 내용이 따라올 때마다 20씩 올리는 편이 안전하다.\n" +
+"\n" +
+"굵기 읽기가 건드리는 것\n" +
+"단어의 앞부분만 굵게 세우면 눈이 단어 전체를 훑지 않고 앞머리만 집은 뒤 나머지를 추론으로 메운다. 영어에서는 단어 앞 40% 정도를 굵게 하지만, 한국어는 조사가 뒤에 붙으므로 조사를 떼어낸 어근의 앞부분에만 굵기를 주는 편이 자연스럽다.\n" +
+"\n" +
+"속도만으로는 부족하다\n" +
+"한 단락을 흘려보낸 직후 화면을 보지 않고 핵심을 한 문장으로 말해 보는 회상(retrieval) 연습, 그리고 같은 글을 하루·사흘·일주일 간격으로 다시 읽는 분산 복습(spaced repetition)이 이해를 기억으로 바꾼다. 가속기는 훑는 횟수를 늘려 줄 뿐이고, 남기는 일은 그다음이다.";
+
+  var SAMPLE_TERMS = "작업기억, 회귀, 분산 복습, spaced repetition";
+
+  var state = {
+    mode:"rsvp", wpm:280, chunk:1, dwell:true, strength:0.5, piv:"red",
+    loop:false, cursor:0, playing:false, terms:[]
+  };
+  var tokens = [], paras = [], spans = [], timer = null, lastCursor = 0, saveTick = 0;
+
+  var $ = function(id){ return document.getElementById(id); };
+  var wrap=$("wrap"), stage=$("stage"), flags=$("flags"), paraCount=$("paraCount"),
+      word=$("word"), wPre=$("wPre"), wPiv=$("wPiv"), wPost=$("wPost"), ghost=$("ghost"),
+      rail=$("rail"), railFill=$("railFill"), posLabel=$("posLabel"), timeLabel=$("timeLabel"),
+      body=$("body"), paraStrip=$("paraStrip"), input=$("input"), termsEl=$("terms"),
+      btnPlay=$("btnPlay"), btnLoop=$("btnLoop"), tally=$("tally");
+
+  function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  function chars(s){ return Array.prototype.slice.call(s); }
+
+  /* ---------------------------------------------------- 저장 */
+  var K = "accel.v1";
+  function save(){
+    try{
+      localStorage.setItem(K, JSON.stringify({
+        text: input.value, terms: termsEl.value, cursor: state.cursor,
+        wpm: state.wpm, chunk: state.chunk, dwell: state.dwell,
+        strength: state.strength, mode: state.mode, piv: state.piv
+      }));
+    }catch(e){}
+  }
+  function restore(){
+    try{
+      var raw = localStorage.getItem(K);
+      return raw ? JSON.parse(raw) : null;
+    }catch(e){ return null; }
+  }
+
+  var PIVS = ["red","amber","teal","violet"];
+  function setPiv(v){
+    state.piv = PIVS.indexOf(v) === -1 ? "red" : v;
+    var r = document.documentElement;
+    PIVS.forEach(function(p){ r.classList.remove("piv-" + p); });
+    r.classList.add("piv-" + state.piv);
+  }
+
+  /* ---------------------------------------------------- 토큰화 */
+  var RE_TAIL   = /[.,·;:…?!)\]}」』”'"]+$/;
+  var RE_OPEN   = /[(\[{「『]/g;
+  var RE_OPENT  = /[(\[{「『]/;
+  var RE_CLOSE  = /[)\]}」』]/g;
+  var RE_CLOSET = /[)\]}」』]/;
+  var RE_LIST   = /^(?:[-–•*▪·○◦]\s|\d{1,3}[.)]\s?|[①-⑳]|#{1,6}\s|[가-하]\.\s?|\([0-9a-zA-Z]+\)\s?)/;
+  var RE_LATIN  = /[A-Za-z]{2,}/;
+  var RE_DIGIT  = /[0-9]/;
+  var RE_WORDY  = /[가-힣A-Za-z]/;
+  var RE_SENTEND= /[.?!。]$/;
+
+  function countOf(s, re){ var m = s.match(re); return m ? m.length : 0; }
+
+  function splitParas(text){
+    var blocks = text.replace(/\r/g,"").split(/\n[ \t]*\n+/), out = [];
+    blocks.forEach(function(b){
+      var cur = [];
+      b.split("\n").forEach(function(l){
+        var s = l.trim();
+        if (!s) return;
+        if (cur.length && RE_LIST.test(s)){ out.push(cur.join(" ")); cur = [s]; }
+        else cur.push(s);
+      });
+      if (cur.length) out.push(cur.join(" "));
+    });
+    return out;
+  }
+
+  function tokenize(text){
+    tokens = []; paras = [];
+    splitParas(text).forEach(function(ptext){
+      var pIdx = paras.length;
+      var isHead = chars(ptext).length <= 44 && !RE_SENTEND.test(ptext) && !RE_LIST.test(ptext);
+      paras.push({ ids:[], heading:isHead, title:ptext });
+
+      var words = ptext.split(/\s+/), merged = [], buf = null;
+      words.forEach(function(w){
+        if (buf !== null){
+          buf += " " + w;
+          if (RE_CLOSET.test(w)){ merged.push(buf); buf = null; }
+          return;
+        }
+        if (countOf(w, RE_OPEN) > countOf(w, RE_CLOSE)) buf = w;
+        else merged.push(w);
+      });
+      if (buf !== null) merged.push(buf);
+
+      merged.forEach(function(t, j){
+        var tail = (t.match(RE_TAIL) || [""])[0];
+        var head = tail ? t.slice(0, t.length - tail.length) : t;
+        var tok = {
+          text:t, head:head, tail:tail, para:pIdx, first:(j === 0),
+          heading:isHead,
+          bracket:RE_OPENT.test(t), latin:RE_LATIN.test(t), digit:RE_DIGIT.test(t),
+          endsSentence:/[.?!。]$/.test(t), endsPhrase:/[,·;:]$/.test(t),
+          term:false, index:tokens.length
+        };
+        paras[pIdx].ids.push(tok.index);
+        tokens.push(tok);
+      });
+    });
+
+    if (!tokens.length){
+      tokens = [{ text:"—", head:"—", tail:"", para:0, first:true, heading:false,
+        bracket:false, latin:false, digit:false, endsSentence:false, endsPhrase:false,
+        term:false, index:0 }];
+      paras = [{ ids:[0], heading:false, title:"—" }];
+    }
+    applyTerms();
+  }
+
+  function applyTerms(){
+    var ts = state.terms;
+    tokens.forEach(function(tok){
+      var low = tok.text.toLowerCase();
+      tok.term = ts.some(function(t){ return t && low.indexOf(t) !== -1; });
+      tok.weight = weigh(tok);
+    });
+  }
+
+  function weigh(tok){
+    var n = chars(tok.head).length, w = 1;
+    if (n >= 10) w += 0.45; else if (n >= 7) w += 0.30;
+    else if (n >= 5) w += 0.16; else if (n <= 1) w -= 0.18;
+    if (tok.endsPhrase)   w += 0.60;
+    if (tok.endsSentence) w += 1.20;
+    if (tok.first)        w += 0.70;
+    if (tok.heading)      w += 0.45;
+    if (tok.latin)        w += 0.30;
+    if (tok.digit)        w += 0.32;
+    if (tok.bracket)      w += 0.35;
+    if (tok.term)         w += 0.75;
+    return Math.max(0.5, w);
+  }
+
+  /* ---------------------------------------------------- 바이오닉 */
+  var JOSA = ["으로서","으로써","에서는","에게는","이라도","하였다","으로","로서","로써",
+    "에서","에게","부터","까지","이나","에는","에도","처럼","보다","한다","하다","된다",
+    "이다","하여","하고","하는","라도","에의","과는","와는","은","는","이","가","을","를",
+    "에","의","와","과","도","로","나","만"];
+  JOSA.sort(function(a,b){ return b.length - a.length; });
+
+  function stem(head){
+    if (chars(head).length < 3) return head;
+    for (var i=0; i<JOSA.length; i++){
+      var j = JOSA[i];
+      if (head.slice(-j.length) === j){
+        var rest = head.slice(0, head.length - j.length);
+        if (chars(rest).length >= 2) return rest;
+      }
+    }
+    return head;
+  }
+
+  function bionic(tok){
+    var s = state.strength;
+    if (!s || !RE_WORDY.test(tok.head)) return esc(tok.text);
+    var cs = chars(tok.head);
+    var n = Math.max(1, Math.min(cs.length, Math.ceil(chars(stem(tok.head)).length * s)));
+    return "<b>" + esc(cs.slice(0,n).join("")) + "</b>" +
+           esc(cs.slice(n).join("")) + esc(tok.tail);
+  }
+
+  /* ---------------------------------------------------- 렌더 */
+  function paintBody(){
+    var html = "";
+    paras.forEach(function(p){
+      html += p.heading ? "<p class=\"h\">" : "<p>";
+      p.ids.forEach(function(id, j){
+        var tok = tokens[id];
+        var cls = "tk" + (tok.term ? " term" : "") + (id < state.cursor ? " read" : "");
+        html += "<span class=\"" + cls + "\" data-i=\"" + id + "\">" + bionic(tok) + "</span>" +
+                (j === p.ids.length-1 ? "" : " ");
+      });
+      html += "</p>";
+    });
+    body.innerHTML = html;
+    spans = body.querySelectorAll(".tk");
+    lastCursor = state.cursor;
+    paintStrip();
+    paintTicks();
+    markNow();
+  }
+
+  function paintStrip(){
+    paraStrip.innerHTML = "";
+    paras.forEach(function(p, i){
+      var b = document.createElement("button");
+      b.className = "pmark"; b.type = "button";
+      b.textContent = (p.heading ? "§" : "¶") + (i+1);
+      b.title = p.title.slice(0, 60);
+      b.setAttribute("aria-current", "false");
+      b.addEventListener("click", function(){ seek(p.ids[0]); });
+      paraStrip.appendChild(b);
+    });
+  }
+
+  function paintTicks(){
+    var old = rail.querySelectorAll(".rail-tick");
+    for (var i=0;i<old.length;i++) old[i].remove();
+    if (paras.length > 60) return;
+    paras.forEach(function(p, i){
+      if (i === 0) return;
+      var d = document.createElement("div");
+      d.className = "rail-tick";
+      d.style.left = (p.ids[0] / tokens.length * 100) + "%";
+      rail.appendChild(d);
+    });
+  }
+
+  // 지문 전체에서 어절 묶음 길이의 95백분위를 기준 크기로 삼는다.
+  // 프레임마다 크기가 바뀌면 글자가 튀므로, 그보다 긴 드문 묶음만 그 자리에서 줄인다.
+  var fit = { len:13, scale:1 };
+  function fitWord(){
+    var lens = [], i, k, l;
+    for (i=0; i<tokens.length; i+=state.chunk){
+      l = 0;
+      for (k=0; k<state.chunk && i+k<tokens.length; k++)
+        l += chars(tokens[i+k].text).length + (k ? 1 : 0);
+      lens.push(l);
+    }
+    if (!lens.length) lens = [13];
+    lens.sort(function(a,b){ return a-b; });
+    fit.len = Math.max(8, lens[Math.min(lens.length-1, Math.floor(lens.length * 0.95))]);
+    fit.scale = fit.len > 13 ? Math.max(0.42, 13 / fit.len) : 1;
+    word.style.setProperty("--wscale", fit.scale.toFixed(3));
+    word.style.setProperty("--wshrink", "1");
+  }
+
+  function chunkOf(i){
+    var out = [];
+    for (var k=0; k<state.chunk && i+k < tokens.length; k++) out.push(tokens[i+k]);
+    return out;
+  }
+
+  function pivot(s){
+    var cs = chars(s), n = cs.length;
+    if (!n) return ["","",""];
+    var i = Math.min(n-1, Math.max(0, Math.round((n-1) * 0.35)));
+    return [cs.slice(0,i).join(""), cs[i], cs.slice(i+1).join("")];
+  }
+
+  function frameMs(i){
+    var c = chunkOf(i), base = 60000 / state.wpm, total = 0;
+    for (var k=0;k<c.length;k++) total += state.dwell ? c[k].weight : 1;
+    return base * (total || 1);
+  }
+
+  function render(){
+    var c = chunkOf(state.cursor);
+    var text = c.map(function(t){ return t.text; }).join(" ");
+    var p = pivot(text);
+    wPre.textContent = p[0]; wPiv.textContent = p[1]; wPost.textContent = p[2];
+
+    var len = chars(text).length;
+    word.style.setProperty("--wshrink",
+      len > fit.len ? Math.max(0.55, fit.len / len).toFixed(3) : "1");
+
+    var next = chunkOf(state.cursor + state.chunk);
+    ghost.textContent = next.length ? next.map(function(t){return t.text;}).join(" ") : "끝";
+
+    flags.innerHTML = "";
+    if (c.some(function(t){ return t.term; })) addTag("용어","term");
+    if (c.some(function(t){ return t.first; })) addTag("단락","para");
+    else if (c.some(function(t){ return t.latin || t.digit; })) addTag("용어·수치","");
+    var pi = c.length ? c[0].para : 0;
+    paraCount.textContent = (pi+1) + " / " + paras.length + " 단락";
+
+    markNow();
+    updateMeter();
+  }
+
+  function addTag(label, kind){
+    var d = document.createElement("span");
+    d.className = "tag" + (kind ? " " + kind : "");
+    d.textContent = label;
+    flags.appendChild(d);
+  }
+
+  function markNow(){
+    if (!spans.length) return;
+    var k, i;
+    for (k=0; k<state.chunk; k++){
+      var old = spans[lastCursor + k];
+      if (old) old.classList.remove("on");
+    }
+    if (state.cursor > lastCursor){
+      for (i=lastCursor; i<state.cursor && i<spans.length; i++) spans[i].classList.add("read");
+    } else if (state.cursor < lastCursor){
+      for (i=state.cursor; i<=lastCursor+state.chunk && i<spans.length; i++) spans[i].classList.remove("read");
+    }
+    for (k=0; k<state.chunk; k++){
+      var el = spans[state.cursor + k];
+      if (el){ el.classList.remove("read"); el.classList.add("on"); }
+    }
+    lastCursor = state.cursor;
+
+    var first = spans[state.cursor];
+    if (first) keepInView(first);
+
+    var pi = tokens[state.cursor] ? tokens[state.cursor].para : 0;
+    var marks = paraStrip.children;
+    for (i=0; i<marks.length; i++) marks[i].setAttribute("aria-current", i === pi ? "true" : "false");
+  }
+
+  // 창은 건드리지 않고 본문 패널만 스크롤한다.
+  function keepInView(el){
+    var cr = body.getBoundingClientRect(), er = el.getBoundingClientRect();
+    if (!cr.height) return;
+    var band = state.mode === "bionic" ? cr.height * 0.30 : 44;
+    if (er.top < cr.top + band)
+      body.scrollTop += er.top - cr.top - band;
+    else if (er.bottom > cr.bottom - band)
+      body.scrollTop += er.bottom - cr.bottom + band;
+  }
+
+  function updateMeter(){
+    var pct = tokens.length <= 1 ? 0 : state.cursor / (tokens.length - 1) * 100;
+    railFill.style.width = pct + "%";
+    rail.setAttribute("aria-valuenow", String(state.cursor));
+    rail.setAttribute("aria-valuemax", String(Math.max(0, tokens.length - 1)));
+    posLabel.textContent = (state.cursor + 1) + " / " + tokens.length + " 어절";
+    timeLabel.textContent = "남은 시간 " + mmss(remainMs(state.cursor, tokens.length));
+  }
+
+  function remainMs(from, to){
+    var base = 60000 / state.wpm, ms = 0;
+    for (var i=from; i<to; i++) ms += base * (state.dwell ? tokens[i].weight : 1);
+    return ms;
+  }
+  function mmss(ms){
+    var s = Math.round(ms/1000);
+    return Math.floor(s/60) + ":" + ("0" + (s%60)).slice(-2);
+  }
+
+  /* ---------------------------------------------------- 재생 */
+  function tick(){
+    render();
+    timer = setTimeout(function(){
+      var pi = tokens[state.cursor].para;
+      var pEnd = paras[pi].ids[paras[pi].ids.length - 1];
+      if (state.loop && state.cursor + state.chunk > pEnd){
+        state.cursor = paras[pi].ids[0];
+        tick(); return;
+      }
+      if (state.cursor + state.chunk >= tokens.length){
+        state.cursor = tokens.length - 1;
+        stop(); render(); return;
+      }
+      state.cursor += state.chunk;
+      if (++saveTick % 24 === 0) save();
+      tick();
+    }, frameMs(state.cursor));
+  }
+
+  function play(){
+    if (state.playing) return;
+    if (state.cursor >= tokens.length - 1) state.cursor = 0;
+    state.playing = true;
+    btnPlay.textContent = "❙❙ 정지";
+    tick();
+  }
+  function stop(){
+    state.playing = false;
+    btnPlay.textContent = "▶ 재생";
+    if (timer){ clearTimeout(timer); timer = null; }
+    save();
+  }
+  function toggle(){ state.playing ? stop() : play(); }
+
+  function seek(i){
+    state.cursor = Math.max(0, Math.min(tokens.length - 1, i));
+    if (state.playing){ clearTimeout(timer); tick(); } else { render(); save(); }
+  }
+
+  function sentenceStart(){
+    var i = state.cursor - 1;
+    while (i > 0){
+      if (tokens[i-1].endsSentence || tokens[i].first) break;
+      i--;
+    }
+    seek(Math.max(0, i));
+  }
+
+  function hopPara(dir){
+    var pi = tokens[state.cursor].para;
+    if (dir < 0 && state.cursor > paras[pi].ids[0]) seek(paras[pi].ids[0]);
+    else {
+      var t = Math.max(0, Math.min(paras.length - 1, pi + dir));
+      seek(paras[t].ids[0]);
+    }
+  }
+
+  /* ---------------------------------------------------- 지문 */
+  function readTerms(){
+    state.terms = termsEl.value.split(",")
+      .map(function(s){ return s.trim().toLowerCase(); })
+      .filter(function(s){ return s.length > 0; });
+  }
+
+  function load(text, keepCursor){
+    stop();
+    var at = keepCursor ? state.cursor : 0;
+    readTerms();
+    tokenize(text);
+    state.cursor = Math.max(0, Math.min(tokens.length - 1, at));
+    lastCursor = state.cursor;
+    fitWord();
+    paintBody();
+    render();
+    updateTally();
+    save();
+  }
+
+  function updateTally(){
+    var raw = input.value.trim();
+    var ch = chars(raw).length;
+    tally.textContent = ch
+      ? ch.toLocaleString() + "자 · " + tokens.length.toLocaleString() + "어절 · 약 " +
+        mmss(remainMs(0, tokens.length))
+      : "글을 붙여넣으면 분량과 예상 시간을 계산합니다";
+  }
+
+  /* ---------------------------------------------------- 파일 열기 */
+  // pdf.js 최신판은 ESM 전용이라 UMD 전역이 없다. 필요할 때만 동적으로 불러온다.
+  var PDFJS = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.4.299/pdf.min.mjs";
+  var PDFJS_WORKER = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/6.4.299/pdf.worker.min.mjs";
+  var pdfLib = null;
+  var fileEl = $("file");
+
+  function note(msg){ tally.textContent = msg; }
+
+  function decodeText(buf){
+    try { return new TextDecoder("utf-8", { fatal:true }).decode(buf); }
+    catch (e) {
+      try { return new TextDecoder("euc-kr").decode(buf); }   // 국내 txt 는 cp949 가 흔하다
+      catch (e2) { return new TextDecoder().decode(buf); }
+    }
+  }
+
+  // PDF 는 줄마다 개행이 박혀 나온다. 문장이 끝난 자리만 단락으로 남긴다.
+  function tidyPdf(raw){
+    var t = raw.replace(/\r/g, "");
+    t = t.replace(/-\n(?=[a-z])/g, "");               // 영문 하이픈 줄바꿈 복원
+    t = t.replace(/[ \t]*\n[ \t]*\n+/g, "\n\n");      // 빈 줄은 단락으로 보존
+    t = t.replace(/([.!?。])\n(?!\n)/g, "$1\n\n");
+    t = t.replace(/(다\.)\n(?!\n)/g, "$1\n\n");
+    t = t.replace(/([^.!?。\n])\n(?!\n)/g, "$1 ");    // 나머지 개행은 공백
+    t = t.replace(/[ \t]{2,}/g, " ");
+    return t.trim();
+  }
+
+  function pdfToText(buf){
+    var ready = pdfLib ? Promise.resolve(pdfLib) : import(PDFJS).then(function(mod){
+      mod.GlobalWorkerOptions.workerSrc = PDFJS_WORKER;
+      pdfLib = mod;
+      return mod;
+    });
+    return ready.then(function(lib){
+      return lib.getDocument({ data: buf }).promise;
+    }).then(function(doc){
+      var pages = [], i = 0;
+      // 쪽 수가 많을 수 있으니 순차로 돌린다. 한꺼번에 띄우면 메모리가 터진다.
+      function nextPage(){
+        if (i >= doc.numPages) return Promise.resolve();
+        i++;
+        note("PDF 읽는 중 — " + i + " / " + doc.numPages + "쪽");
+        return doc.getPage(i)
+          .then(function(pg){ return pg.getTextContent(); })
+          .then(function(tc){
+            var lines = [], line = "";
+            tc.items.forEach(function(it){
+              if (typeof it.str !== "string") return;
+              line += it.str;
+              if (it.hasEOL){ lines.push(line); line = ""; }
+            });
+            if (line) lines.push(line);
+            pages.push(lines.join("\n"));
+            return nextPage();
+          });
+      }
+      return nextPage().then(function(){ return tidyPdf(pages.join("\n\n")); });
+    });
+  }
+
+  function useText(text){
+    input.value = text;
+    termsEl.value = "";
+    var prev = restore();
+    // 같은 파일을 다시 열었으면 읽던 자리에서 이어 읽는다.
+    state.cursor = (prev && prev.text === text) ? (prev.cursor || 0) : 0;
+    load(text, true);
+  }
+
+  $("btnFile").addEventListener("click", function(){ fileEl.click(); });
+  fileEl.addEventListener("change", function(){
+    var f = fileEl.files && fileEl.files[0];
+    if (!f) return;
+    var isPdf = /\.pdf$/i.test(f.name) || f.type === "application/pdf";
+    note("읽는 중 — " + f.name);
+    f.arrayBuffer()
+      .then(function(buf){ return isPdf ? pdfToText(buf) : decodeText(buf); })
+      .then(function(text){
+        if (!text || !text.trim()){
+          note("본문 텍스트가 없습니다. 스캔 이미지 PDF 는 글자를 뽑을 수 없습니다.");
+          return;
+        }
+        useText(text);
+      })
+      .catch(function(err){
+        note("열지 못했습니다 — " + ((err && err.message) || err));
+      })
+      .then(function(){ fileEl.value = ""; });
+  });
+
+  /* ---------------------------------------------------- 컨트롤 */
+  function segment(id, apply){
+    var host = $(id);
+    host.addEventListener("click", function(e){
+      var b = e.target.closest("button");
+      if (!b || !host.contains(b)) return;
+      var all = host.querySelectorAll("button");
+      for (var i=0;i<all.length;i++) all[i].setAttribute("aria-pressed","false");
+      b.setAttribute("aria-pressed","true");
+      apply(b);
+      save();
+    });
+  }
+  function pressSeg(id, value){
+    var all = $(id).querySelectorAll("button");
+    for (var i=0;i<all.length;i++)
+      all[i].setAttribute("aria-pressed", String(all[i].dataset.n || all[i].dataset.v) === String(value) ? "true":"false");
+  }
+
+  segment("chunkSeg", function(b){ state.chunk = +b.dataset.n; fitWord(); render(); });
+  segment("dwellSeg", function(b){ state.dwell = b.dataset.v === "1"; render(); updateTally(); });
+  segment("strSeg",   function(b){ state.strength = +b.dataset.v; paintBody(); });
+  segment("pivSeg",   function(b){ setPiv(b.dataset.v); });
+
+  var wpmEl = $("wpm"), wpmVal = $("wpmVal");
+  function setWpm(v, quiet){
+    state.wpm = Math.max(100, Math.min(800, v));
+    wpmEl.value = state.wpm;
+    wpmVal.textContent = state.wpm + " 어절/분";
+    updateMeter(); updateTally();
+    if (!quiet) save();
+  }
+  wpmEl.addEventListener("input", function(){ setWpm(+wpmEl.value); });
+
+  function setMode(m){
+    state.mode = m;
+    wrap.className = "wrap mode-" + m;
+    stage.hidden = (m === "bionic");
+    $("modeRsvp").setAttribute("aria-selected", m === "rsvp" ? "true":"false");
+    $("modeBionic").setAttribute("aria-selected", m === "bionic" ? "true":"false");
+    render(); save();
+  }
+  $("modeRsvp").addEventListener("click", function(){ setMode("rsvp"); });
+  $("modeBionic").addEventListener("click", function(){ setMode("bionic"); });
+
+  btnPlay.addEventListener("click", toggle);
+  stage.addEventListener("click", toggle);   // 이동 중 한 손 조작
+  $("btnBack").addEventListener("click", function(){ seek(state.cursor - state.chunk); });
+  $("btnFwd").addEventListener("click",  function(){ seek(state.cursor + state.chunk); });
+  $("btnSent").addEventListener("click", sentenceStart);
+  btnLoop.addEventListener("click", function(){
+    state.loop = !state.loop;
+    btnLoop.setAttribute("aria-pressed", String(state.loop));
+    save();
+  });
+
+  $("btnApply").addEventListener("click", function(){
+    var t = input.value.trim();
+    if (t) load(t, false);
+  });
+  $("btnSample").addEventListener("click", function(){
+    input.value = SAMPLE; termsEl.value = SAMPLE_TERMS; load(SAMPLE, false);
+  });
+  // (파일로 넣은 지문은 useText 가 이어 읽기까지 처리한다)
+  $("btnClear").addEventListener("click", function(){
+    input.value = ""; stop(); load("", false); input.focus();
+  });
+  input.addEventListener("input", function(){
+    var ch = chars(input.value.trim()).length;
+    tally.textContent = ch ? ch.toLocaleString() + "자 — [이 글로 읽기]를 누르세요"
+                           : "글을 붙여넣으면 분량과 예상 시간을 계산합니다";
+  });
+  termsEl.addEventListener("change", function(){
+    readTerms(); applyTerms(); paintBody(); render(); save();
+  });
+
+  body.addEventListener("click", function(e){
+    var s = e.target.closest(".tk");
+    if (s) seek(+s.dataset.i);
+  });
+
+  function railSeek(e){
+    var r = rail.getBoundingClientRect();
+    var x = (e.clientX - r.left) / r.width;
+    seek(Math.round(Math.max(0, Math.min(1, x)) * (tokens.length - 1)));
+  }
+  rail.addEventListener("pointerdown", function(e){
+    railSeek(e);
+    try{ rail.setPointerCapture(e.pointerId); }catch(_){}
+    rail.addEventListener("pointermove", railSeek);
+  });
+  rail.addEventListener("pointerup", function(e){
+    rail.removeEventListener("pointermove", railSeek);
+    try{ rail.releasePointerCapture(e.pointerId); }catch(_){}
+  });
+
+  document.addEventListener("keydown", function(e){
+    var t = e.target.tagName;
+    if (t === "TEXTAREA" || t === "INPUT") return;
+    switch (e.key){
+      case " ":          e.preventDefault(); toggle(); break;
+      case "ArrowLeft":  e.preventDefault(); seek(state.cursor - state.chunk); break;
+      case "ArrowRight": e.preventDefault(); seek(state.cursor + state.chunk); break;
+      case "ArrowUp":    e.preventDefault(); setWpm(state.wpm + 20); break;
+      case "ArrowDown":  e.preventDefault(); setWpm(state.wpm - 20); break;
+      case "Home":       e.preventDefault(); seek(0); break;
+      case "[":          hopPara(-1); break;
+      case "]":          hopPara(1); break;
+      case "r": case "R": sentenceStart(); break;
+      case "1": case "2": case "3": $("chunk" + e.key).click(); break;
+    }
+  });
+
+  document.addEventListener("visibilitychange", function(){
+    if (document.hidden){ if (state.playing) stop(); else save(); }
+  });
+
+  /* ---------------------------------------------------- 시작 */
+  var saved = restore();
+  var injected = (typeof window.__ACCEL_TEXT__ === "string" && window.__ACCEL_TEXT__.trim())
+                 ? window.__ACCEL_TEXT__ : null;
+
+  // 설정은 저장된 값을 따르고, 지문은 (주입 > 저장 > 예시) 순으로 고른다.
+  if (saved){
+    state.wpm = saved.wpm || 280;
+    state.chunk = saved.chunk || 1;
+    state.dwell = saved.dwell !== false;
+    state.strength = (typeof saved.strength === "number") ? saved.strength : 0.5;
+    pressSeg("chunkSeg", state.chunk);
+    pressSeg("dwellSeg", state.dwell ? "1" : "0");
+    pressSeg("strSeg", state.strength);
+    setPiv(saved.piv || "red");
+    pressSeg("pivSeg", state.piv);
+  } else {
+    setPiv("red");
+  }
+  setWpm(state.wpm, true);
+
+  var startText = injected ||
+    (saved && saved.text && saved.text.trim() ? saved.text : SAMPLE);
+  input.value = startText;
+  termsEl.value = (saved && saved.terms) ? saved.terms
+                : (startText === SAMPLE ? SAMPLE_TERMS : "");
+  // 같은 지문으로 다시 들어왔으면 읽던 자리에서 이어 읽는다.
+  state.cursor = (saved && saved.text === startText) ? (saved.cursor || 0) : 0;
+  load(startText, true);
+  setMode(saved && saved.mode === "bionic" ? "bionic" : "rsvp");
+})();
+</script>
+
+<script>
+// 서비스워커는 https 에서만 등록한다. 파일로 직접 열었을 때 콘솔을 더럽히지 않게.
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  window.addEventListener("load", function () {
+    navigator.serviceWorker.register("./sw.js").catch(function () {});
+  });
+}
+</script>
+</body>
+</html>
