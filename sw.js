@@ -1,6 +1,6 @@
 // 네트워크 우선 + 캐시 폴백. 온라인이면 항상 최신을 받고,
 // 한 번 열어 본 뒤에는 신호가 없어도 그대로 열린다.
-const VERSION = "32570d054cbb";
+const VERSION = "4a3bb2173880";
 const CACHE = "accel-" + VERSION;
 const SHELL = ["./", "./index.html", "./manifest.webmanifest", "./icon-192.png", "./icon-512.png", "./apple-touch-icon.png"];
 
